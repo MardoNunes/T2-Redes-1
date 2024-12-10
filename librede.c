@@ -121,7 +121,11 @@ void menu_dealer() {
 void mostrar_cartas(struct Jogador *player) {
     printf("[PLAYER] Suas cartas: ");
     for (int i = 0; i < player->hand_size; i++) {
-        printf("%c ", player->hand[i]);
+        if(player->hand[i] == 'T'){
+            printf("10 ");
+        }
+        else
+            printf("%c ", player->hand[i]);
     }
     printf("\n");
 }
@@ -163,13 +167,13 @@ short soma_cartas(struct Jogador* player){
                 soma += 10;
                 break;
             case 'J':
-                soma += 11;
+                soma += 10;
                 break;
             case 'Q':
-                soma += 12;
+                soma += 10;
                 break;
             case 'K':
-                soma += 13;
+                soma += 10;
                 break;
         }
     }
@@ -220,8 +224,8 @@ void guardar_argumentos(int argc, char *argv[], const char **local_ip, int *loca
     }
 
     player->id = atoi(argv[1]);
-    //aleatoria um id para escolher o dealer
-  
+    
+
 
     if(player->id == 0){
         player->dealer = 1;
@@ -231,8 +235,9 @@ void guardar_argumentos(int argc, char *argv[], const char **local_ip, int *loca
         player->dealer = 0;
         player->bastao = 0;
     }
-    player->rodada = 0;
     player->out = 0;
+
+
     *local_ip = argv[2];
     *local_port = atoi(argv[3]);
     *next_ip = argv[4];
@@ -240,18 +245,17 @@ void guardar_argumentos(int argc, char *argv[], const char **local_ip, int *loca
 }
 
 //montar mensagem
-void montar_mensagem(struct message *msg, int tipo, int destino, int origem, char *mensagem){
+void montar_mensagem(struct message *msg, int tipo, int origem, char *mensagem){
     msg->tipo = tipo;
-    msg->destino = destino;
     msg->origem = origem;
-    snprintf(msg->msg, BUFFER_SIZE, mensagem);
+    strcpy(msg->msg, mensagem);
 }
 
 // Passa a vez para o próximo jogador
 void passar_vez(int sock_send, struct sockaddr_in *next_addr, struct Jogador *player) {
     struct message msg;
     player->bastao = 0;  // Atualiza o estado para refletir que a vez foi passada
-    montar_mensagem(&msg, 2, 0, 0, "passar");
+    montar_mensagem(&msg, 2, 0, "passar");
     sendto(sock_send, &msg, sizeof(struct message), 0, (struct sockaddr *)next_addr, sizeof(*next_addr));
     printf("[DEALER] Passando a vez...\n");
     
@@ -275,7 +279,7 @@ void distribuir_cartas(struct Cartas *cartas, int sock_send, struct sockaddr_in 
         addr->sin_port = htons(5000 + i + 1); // Porta do próximo jogador
         
         pegar_cartas(cartas, carta);
-        montar_mensagem(&msg, 1, i, 0, carta);
+        montar_mensagem(&msg, 1, 0, carta);
         sendto(sock_send, &msg, sizeof(msg), 0, (struct sockaddr *)next_addr, sizeof(*next_addr));
         next_addr = addr;   // Atualiza o endereço do próximo jogador
     }
@@ -290,7 +294,6 @@ void recebe_msg(struct Jogador *player, struct message *msg, int sock_send, stru
             player->hand_size++;
             player->hand[player->hand_size] = msg->msg[1];
             player->hand_size++;
-            //printf("[INFO] Carta recebida: %c\n", player->hand[player->hand_size - 1]);
         }
         else if (msg->tipo == 2){
             player->bastao = 1; // Jogador recebe o bastão
@@ -307,7 +310,7 @@ void recebe_msg(struct Jogador *player, struct message *msg, int sock_send, stru
                 char carta[2];
                 embaralhar_cartas(cartas);
                 pegar_carta(cartas, carta);
-                montar_mensagem(msgEnviaCarta, 4, msg->origem, 0, carta);
+                montar_mensagem(msgEnviaCarta, 4, 0, carta);
                 sendto(sock_send, msgEnviaCarta, sizeof(struct message), 0, (struct sockaddr *)next_addr, sizeof(*next_addr));
                 
 
@@ -322,7 +325,10 @@ void recebe_msg(struct Jogador *player, struct message *msg, int sock_send, stru
                 //recebe a carta e adiciona na mão
                 player->hand[player->hand_size] = msg->msg[0];
                 player->hand_size++;
-                printf("[INFO] Carta recebida: %c\n", player->hand[player->hand_size - 1]);
+                if(player->hand[player->hand_size - 1] == 'T')
+                    printf("[INFO] Carta recebida: 10\n");
+                else
+                    printf("[INFO] Carta recebida: %c\n", player->hand[player->hand_size - 1]);
             }
             else{
                 //passa a msg para o proximo
@@ -395,7 +401,7 @@ int busca_ganhador(int jogadores_ativos[]){
 // Encerra o jogo
 void encerrar_jogo(struct Jogador *player, int sock_send, struct sockaddr_in *next_addr){
     struct message msg;
-    montar_mensagem(&msg, 6, 0, player->id, "encerrar");
+    montar_mensagem(&msg, 6, player->id, "encerrar");
     sendto(sock_send, &msg, sizeof(struct message), 0, (struct sockaddr *)next_addr, sizeof(*next_addr));
     printf("[DEALER] Encerrando jogo...\n");
 }
@@ -408,7 +414,6 @@ int verifica_jogadores_parados(int jogadores_parados[]){
             parados++;
         }
     }
-
 
     return parados;
 }

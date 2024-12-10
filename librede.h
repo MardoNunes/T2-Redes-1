@@ -24,13 +24,11 @@ struct message {
 // Estrutura do jogador
 struct Jogador {
     int id;              // ID do jogador
-    int creditos;        // Créditos do jogador
     int hand_size;       // Tamanho da mão do jogador
     int valor;     // Valor da soma de suas cartas
     char hand[MAX_CARDS]; // Mão do jogador
     short dealer;        // Se o jogador é o dealer
     short bastao;           // Se é a vez do jogador
-    int rodada;          // Rodada atual
     int out;
     int parar;
     int jogadores_ativos[NUM_PLAYERS];  // jogadores ativos - ou seja ainda nao estouraram
@@ -53,7 +51,7 @@ short soma_cartas(struct Jogador* player);
 void menu_jogador(struct Jogador *player);
 void setar_endereco(struct sockaddr_in *local_addr, struct sockaddr_in *next_addr, const char *local_ip, int local_port, const char *next_ip, int next_port);
 void guardar_argumentos(int argc, char *argv[], const char **local_ip, int *local_port, const char **next_ip, int *next_port, struct Jogador *player);
-void montar_mensagem(struct message *msg, int tipo, int destino, int origem, char *mensagem);
+void montar_mensagem(struct message *msg, int tipo, int origem, char *mensagem);
 void passar_vez(int sock_send, struct sockaddr_in *next_addr, struct Jogador *player);
 void distribuir_cartas(struct Cartas *cartas, int sock_send, struct sockaddr_in *next_addr);
 void recebe_msg(struct Jogador *player, struct message *msg, int sock_send, struct sockaddr_in *next_addr, struct Cartas *cartas);

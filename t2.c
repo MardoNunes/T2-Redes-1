@@ -41,8 +41,10 @@ int main(int argc, char *argv[]) {
         exit(EXIT_FAILURE);
     }
 
-
-
+    if(player->dealer == 1)
+        printf("Você é o dealer\n");
+    else
+        printf("Você é o jogador %d\n", player->id);
 
     while (1) {
         //dealer verifica se todos os jogadores ativos estouraram
@@ -114,7 +116,7 @@ int main(int argc, char *argv[]) {
                 case 1: {
                     printf("[PLAYER] Pedindo carta ao dealer...\n");
                     struct message msg;
-                    montar_mensagem(&msg, 3, 0, player->id, "pedir");
+                    montar_mensagem(&msg, 3, player->id, "pedir");
                     sendto(sock_send, &msg, sizeof(struct message), 0, (struct sockaddr *)&next_addr, sizeof(next_addr));
                     
                     //recebe msg do dealer
@@ -126,14 +128,13 @@ int main(int argc, char *argv[]) {
                     } while (msg2.tipo != 4 || msg2.origem != 0 || bytes < 0); // Verifica o tipo e a origem da mensagem
 
                     recebe_msg(player, &msg2, sock_send, &next_addr, cartas);
+                    
                     mostrar_cartas(player);
                     short aux = soma_cartas(player);
                     if(aux == 1){
                         //manda msg para o dealer
                         struct message msg;
-                        montar_mensagem(&msg, 5, 0, player->id, "estourou");
-                        printf("Mensagem: %s\n", msg.msg);
-                        printf("Tipo: %d\n", msg.tipo);
+                        montar_mensagem(&msg, 5, player->id, "estourou");
                         sendto(sock_send, &msg, sizeof(struct message), 0, (struct sockaddr *)&next_addr, sizeof(next_addr));
                     }
                     passar_vez(sock_send, &next_addr, player);
@@ -145,7 +146,7 @@ int main(int argc, char *argv[]) {
                     struct message msg;
                     char mao[10];
                     sprintf(mao, "%d", player->valor);
-                    montar_mensagem(&msg, 7, 0, player->id, mao);
+                    montar_mensagem(&msg, 7, player->id, mao);
                     sendto(sock_send, &msg, sizeof(struct message), 0, (struct sockaddr *)&next_addr, sizeof(next_addr));
                     passar_vez(sock_send, &next_addr, player);
                     break;
