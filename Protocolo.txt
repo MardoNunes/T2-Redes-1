@@ -1,0 +1,4 @@
+Tipo-> Pedindo carta ou Parando
+Dado-> Qual carta enviar/receber
+Destinatário -> Quem receberá a msg
+Mandatário -> Quem está mandando a msg
